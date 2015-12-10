@@ -22,8 +22,10 @@
 				die ("Unable to open file $path");
 			}
 			
+			pg_query("BEGIN");
+			
 			$doc = new DOMDocument();
-			$doc->load($path);
+			$doc->load($path);							
 			
 			$documentElement = $doc->documentElement;
 			if ($documentElement->nodeName != 'clanek') {
@@ -31,6 +33,8 @@
 			}		
 			
 			$this->importClanek($documentElement);
+			
+			pg_query("COMMIT");
 		}
 		
 		// <clanek>

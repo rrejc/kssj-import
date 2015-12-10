@@ -7,7 +7,7 @@
 	$importer->db = $db;
 	
 	// Import part of speeches
-	//$importer->importPartOfSpeech();
+	$importer->importPartOfSpeech();
 	
 	// Import data files (parameter 0 is script name)
 	if (count($argv) == 1) {
