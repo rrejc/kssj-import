@@ -24,8 +24,9 @@
 			
 			pg_query("BEGIN");
 			
-			$doc = new DOMDocument();
-			$doc->load($path);							
+			$xml = '<?xml version="1.0" encoding="utf-8"?>' . file_get_contents($path);
+			$doc = new DOMDocument('1.0', 'utf-8');
+			$doc->loadXML($xml);			
 			
 			$documentElement = $doc->documentElement;
 			if ($documentElement->nodeName != 'clanek') {
