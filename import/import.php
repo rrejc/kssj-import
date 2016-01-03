@@ -6,6 +6,11 @@
 	$importer = new DataImporter();	
 	$importer->db = $db;
 	
+	date_default_timezone_set('Europe/Ljubljana'); // Set in ini
+	
+	// Cleanup
+	$importer->cleanup();
+	
 	// Import part of speeches
 	$importer->importPartOfSpeech();
 	
@@ -19,7 +24,7 @@
 	foreach ($directory as $file) {
 		if ($file->isFile() && $file->getExtension() == 'xml') {
 			$path = $file->getPathname();
-			echo "Importing file $path...\n";			
+			echo date('d.m.Y H:i:s') . " Importing file $path...\n";			
 			$importer->importFile($path);
 		}
 	}	

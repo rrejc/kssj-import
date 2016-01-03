@@ -2,6 +2,12 @@
 	class DataImporter {
 		public $db;
 		
+		public function cleanup() {
+			pg_query($this->db, 'TRUNCATE TABLE kssj_gesla CASCADE');
+			pg_query($this->db, 'TRUNCATE TABLE kssj_vrste_strukture CASCADE');
+			pg_query($this->db, 'TRUNCATE TABLE sssj_bes_vrste CASCADE');
+		}
+		
 		public function importPartOfSpeech() {
 			$pos = array (
 				1 => 'samostalnik',
@@ -158,9 +164,10 @@
 			}		
 			$strukturaElement = $strukturaElements->item(0);
 			$struktura = $strukturaElement->nodeValue;
+			$vrstaStrukture = $this->importVrstaStrukture($struktura);
 			
-			$sql = 'INSERT INTO kssj_strukture (id_gesla, id_pomena, zap_st, struktura) VALUES ($1, $2, $3, $4) RETURNING id_strukture';
-			$result = pg_query_params($this->db, $sql, array($entryId, $meaningId, $order, $struktura));
+			$sql = 'INSERT INTO kssj_strukture (id_gesla, id_pomena, id_vrste_strukture, zap_st) VALUES ($1, $2, $3, $4) RETURNING id_strukture';
+			$result = pg_query_params($this->db, $sql, array($entryId, $meaningId, $vrstaStrukture, $order));
 			$structureId = pg_fetch_result($result, 'id_strukture');			
 			
 			$kolokacijeElements = $skladStrukturaElement->getElementsByTagName('kolokacije');
@@ -169,6 +176,89 @@
 			}
 			$kolokacijeElement = $kolokacijeElements->item(0);
 			$this->importKolokacije($kolokacijeElement, $entryId, $meaningId, $structureId);
+		}
+		
+		private function importVrstaStrukture($structure) {
+			$sql = 'SELECT id_vrste_strukture FROM kssj_vrste_strukture WHERE struktura = $1';
+			$result = pg_query_params($this->db, $sql, array($structure));
+			$rows = pg_num_rows($result);
+			if ($rows !== 0) {
+				return pg_fetch_result($result, 'id_vrste_strukture');	
+			}
+			
+			$plain = $structure;
+			$plain = str_replace(' ', ' + ', $plain);
+			$plain = str_replace('sbz0', 'samostalnik (0)', $plain);
+			$plain = str_replace('sbz1', 'samostalnik (1)', $plain);
+			$plain = str_replace('sbz2', 'samostalnik (2)', $plain);
+			$plain = str_replace('sbz3', 'samostalnik (3)', $plain);
+			$plain = str_replace('sbz4', 'samostalnik (4)', $plain);
+			$plain = str_replace('sbz5', 'samostalnik (5)', $plain);
+			$plain = str_replace('sbz6', 'samostalnik (6)', $plain);
+			$plain = str_replace('pbz0', 'pridevnik (0)', $plain);
+			$plain = str_replace('pbz1', 'pridevnik (1)', $plain);
+			$plain = str_replace('pbz2', 'pridevnik (2)', $plain);
+			$plain = str_replace('pbz3', 'pridevnik (3)', $plain);
+			$plain = str_replace('pbz4', 'pridevnik (4)', $plain);
+			$plain = str_replace('pbz5', 'pridevnik (5', $plain);
+			$plain = str_replace('pbz6', 'pridevnik (6)', $plain);
+			$plain = str_replace('gbz', 'glagol', $plain);
+			$plain = str_replace('rbz', 'prislov', $plain);
+			$plain = str_replace('SBZ0', 'samostalnik (0)', $plain);
+			$plain = str_replace('SBZ1', 'samostalnik (1)', $plain);
+			$plain = str_replace('SBZ2', 'samostalnik (2)', $plain);
+			$plain = str_replace('SBZ3', 'samostalnik (3)', $plain);
+			$plain = str_replace('SBZ4', 'samostalnik (4)', $plain);
+			$plain = str_replace('SBZ5', 'samostalnik (5)', $plain);
+			$plain = str_replace('SBZ6', 'samostalnik (6)', $plain);
+			$plain = str_replace('PBZ0', 'pridevnik (0)', $plain);
+			$plain = str_replace('PBZ1', 'pridevnik (1)', $plain);
+			$plain = str_replace('PBZ2', 'pridevnik (2)', $plain);
+			$plain = str_replace('PBZ3', 'pridevnik (3)', $plain);
+			$plain = str_replace('PBZ4', 'pridevnik (4)', $plain);
+			$plain = str_replace('PBZ5', 'pridevnik (5)', $plain);
+			$plain = str_replace('PBZ6', 'pridevnik (6)', $plain);
+			$plain = str_replace('GBZ', 'glagol', $plain);
+			$plain = str_replace('RBZ', 'prislov', $plain);					
+			
+			$html = $structure;
+			$html = str_replace(' ', ' + ', $html);
+			$html = str_replace('sbz0', '<em>samostalnik (0)</em>', $html);
+			$html = str_replace('sbz1', '<em>samostalnik (1)</em>', $html);
+			$html = str_replace('sbz2', '<em>samostalnik (2</em>)', $html);
+			$html = str_replace('sbz3', '<em>samostalnik (3</em>)', $html);
+			$html = str_replace('sbz4', '<em>samostalnik (4</em>)', $html);
+			$html = str_replace('sbz5', '<em>samostalnik (5)</em>', $html);
+			$html = str_replace('sbz6', '<em>samostalnik (6)</em>', $html);
+			$html = str_replace('pbz0', '<em>pridevnik (0)</em>', $html);
+			$html = str_replace('pbz1', '<em>pridevnik (1)</em>', $html);
+			$html = str_replace('pbz2', '<em>pridevnik (2)</em>', $html);
+			$html = str_replace('pbz3', '<em>pridevnik (3)</em>', $html);
+			$html = str_replace('pbz4', '<em>pridevnik (4)</em>', $html);
+			$html = str_replace('pbz5', '<em>pridevnik (5</em>', $html);
+			$html = str_replace('pbz6', '<em>pridevnik (6)</em>', $html);
+			$html = str_replace('gbz', '<em>glagol</em>', $html);
+			$html = str_replace('rbz', '<em>prislov</em>', $html);
+			$html = str_replace('SBZ0', '<strong>samostalnik (0)</strong>', $html);
+			$html = str_replace('SBZ1', '<strong>samostalnik (1)</strong>', $html);
+			$html = str_replace('SBZ2', '<strong>samostalnik (2)</strong>', $html);
+			$html = str_replace('SBZ3', '<strong>samostalnik (3)</strong>', $html);
+			$html = str_replace('SBZ4', '<strong>samostalnik (4)</strong>', $html);
+			$html = str_replace('SBZ5', '<strong>samostalnik (5)</strong>', $html);
+			$html = str_replace('SBZ6', '<strong>samostalnik (6)</strong>', $html);
+			$html = str_replace('PBZ0', '<strong>pridevnik (0)</strong>', $html);
+			$html = str_replace('PBZ1', '<strong>pridevnik (1)</strong>', $html);
+			$html = str_replace('PBZ2', '<strong>pridevnik (2)</strong>', $html);
+			$html = str_replace('PBZ3', '<strong>pridevnik (3)</strong>', $html);
+			$html = str_replace('PBZ4', '<strong>pridevnik (4)</strong>', $html);
+			$html = str_replace('PBZ5', '<strong>pridevnik (5)</strong>', $html);
+			$html = str_replace('PBZ6', '<strong>pridevnik (6)</strong>', $html);
+			$html = str_replace('GBZ', '<strong>glagol</strong>', $html);
+			$html = str_replace('RBZ', '<strong>prislov</strong>', $html);			
+			
+			$sql = 'INSERT INTO kssj_vrste_strukture (struktura, opis_text, opis_html) VALUES ($1, $2, $3) RETURNING id_vrste_strukture';
+			$result = pg_query_params($this->db, $sql, array($structure, $plain, $html));
+			return pg_fetch_result($result, 'id_vrste_strukture');						
 		}
 		
 		// <kolokacije>
@@ -185,9 +275,10 @@
 		// <kolokacija>
 		private function importKolokacija($kolokacijaElement, $entryId, $meaningId, $structureId, $order)  {
 			$kolokacija = $this->getKolokacija($kolokacijaElement);
+			$kolokacijaText = $this->getKolokacijaText($kolokacijaElement);
 			
-			$sql = 'INSERT INTO kssj_kolokacije (id_gesla, id_pomena, id_strukture, zap_st, kolokacija) VALUES ($1, $2, $3, $4, $5) RETURNING id_kolokacije';
-			$result = pg_query_params($this->db, $sql, array($entryId, $meaningId, $structureId, $order, $kolokacija));
+			$sql = 'INSERT INTO kssj_kolokacije (id_gesla, id_pomena, id_strukture, zap_st, kolokacija, kolokacija_text) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id_kolokacije';
+			$result = pg_query_params($this->db, $sql, array($entryId, $meaningId, $structureId, $order, $kolokacija, $kolokacijaText));
 			$collocationId = pg_fetch_result($result, 'id_kolokacije');
 
 			$zglediElements = $kolokacijaElement->getElementsByTagName('zgledi');
@@ -211,35 +302,97 @@
 		
 		// <zgled>
 		private function importZgled($zgledElement, $entryId, $meaningId, $structureId, $collocationId, $order) {
-			$zgled = $this->getInnerHtml($zgledElement);
+			$zgled= $this->parseZgled($zgledElement);
 			
-			$sql = 'INSERT INTO kssj_zgledi (id_gesla, id_pomena, id_strukture, id_kolokacije, zap_st, zgled) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id_zgleda';
-			$result = pg_query_params($this->db, $sql, array($entryId, $meaningId, $structureId, $collocationId, $order, $zgled));
+			$sql = 'INSERT INTO kssj_zgledi (id_gesla, id_pomena, id_strukture, id_kolokacije, zap_st, zgled, zgled_text, zgled_html) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id_zgleda';
+			$result = pg_query_params($this->db, $sql, array($entryId, $meaningId, $structureId, $collocationId, $order, $zgled->xml, $zgled->text, $zgled->html));
 			$exampleId = pg_fetch_result($result, 'id_zgleda');
 			return $exampleId;
 		}
 		
-		private function getInnerHtml($element) {
-			$innerHtml = '';
+		private function parseZgled($element) {
+			$obj = new stdClass();
+			$obj->xml = '';
+			$obj->text = '';
+			$obj->html = '';
 			
 			$childNodes = $element->childNodes;
 			foreach ($childNodes as $childNode) {
-				$innerHtml .= $element->ownerDocument->saveHtml($childNode);
+				if ($childNode->nodeType == XML_ELEMENT_NODE) {
+					$obj->xml .= '<' . $childNode->nodeName . '>' . $childNode->nodeValue . '</' . $childNode->nodeName . '>'; 			
+					$obj->text .= $childNode->nodeValue;		
+					if ($childNode->nodeName == 'i') {
+						$obj->html .= '<strong>' . $childNode->nodeValue . '</strong>';
+					} else if ($childNode->nodeName == 'k') {
+						$obj->html .= '<em>' . $childNode->nodeValue . '</em>';
+					}
+				} else if ($childNode->nodeType == XML_TEXT_NODE) {
+					$obj->xml .=  $childNode->nodeValue;
+					$obj->text .= $childNode->nodeValue;
+					$obj->html .= $childNode->nodeValue;
+				} 
 			}
-			return $innerHtml;
+			return $obj;
+		}
+		
+		private function getKolokacijaText($element) {
+			$text = '';
+			
+			$childNodes = $element->childNodes;
+			foreach ($childNodes as $childNode) {
+				if ($childNode->nodeType == XML_ELEMENT_NODE) {
+					if ($childNode->nodeName == 'zgledi') {
+						continue;
+					} else {
+						if ($childNode->nodeName == 'ks') {
+							foreach ($childNode->childNodes as $kNode) {
+								if ($kNode->nodeName == 'k') {
+									$text = $text . $kNode->nodeValue . ' ';
+									break;
+								}
+							}
+						}
+						else
+						{
+							$text = $text . $childNode->nodeValue . ' ';
+						}
+					}
+				}
+			}
+			
+			return trim($text);			
 		}
 		
 		private function getKolokacija($element) {
-			$innerHtml = '';
+			$obj = new stdClass();
+			$obj->data = array();
 			
 			$childNodes = $element->childNodes;
 			foreach ($childNodes as $childNode) {
-				if ($childNode->nodeType == XML_ELEMENT_NODE && $childNode->nodeName == 'zgledi') {
-					continue;
-				}				
-				$innerHtml .= $element->ownerDocument->saveHtml($childNode);
+				if ($childNode->nodeType == XML_ELEMENT_NODE) {
+					if ($childNode->nodeName == 'zgledi') {
+						continue;
+					} else {
+						$item = new stdClass();
+						if ($childNode->nodeName == 'ks') {
+							$item->name = 'k';
+							foreach ($childNode->childNodes as $kNode) {
+								if ($kNode->nodeName == 'k') {
+									$item->value = $kNode->nodeValue;
+									break;
+								}
+							}
+						}
+						else
+						{
+							$item->name = $childNode->nodeName;
+							$item->value = $childNode->nodeValue;
+						}
+						array_push($obj->data, $item);
+					}
+				}
 			}
-			return $innerHtml;			
+			return json_encode($obj, JSON_UNESCAPED_UNICODE);
 		}
 	}
 ?>
