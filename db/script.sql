@@ -1,6 +1,6 @@
 ﻿/*
 Created: 22.11.2015
-Modified: 3.1.2016
+Modified: 16.1.2016
 Model: PostgreSQL 9.4
 Database: PostgreSQL 9.4
 */
@@ -75,6 +75,11 @@ CREATE TABLE "kssj_kolokacije"(
 )
 ;
 
+-- Create indexes for table kssj_kolokacije
+
+CREATE INDEX "kssj_kolokacije_ix1" ON "kssj_kolokacije" ("id_strukture")
+;
+
 -- Add keys for table kssj_kolokacije
 
 ALTER TABLE "kssj_kolokacije" ADD CONSTRAINT "kssj_kolokacije_pk" PRIMARY KEY ("id_kolokacije","id_strukture","id_pomena","id_gesla")
@@ -93,6 +98,11 @@ CREATE TABLE "kssj_zgledi"(
  "zgled_text" Character varying(4000) NOT NULL,
  "zgled_html" Character varying(4000) NOT NULL
 )
+;
+
+-- Create indexes for table kssj_zgledi
+
+CREATE INDEX "kssj_zgledi_ix1" ON "kssj_zgledi" ("id_kolokacije")
 ;
 
 -- Add keys for table kssj_zgledi
@@ -126,7 +136,10 @@ CREATE TABLE "kssj_strukture"(
 
 -- Create indexes for table kssj_strukture
 
-CREATE INDEX "IX_Relationship2" ON "kssj_strukture" ("id_vrste_strukture")
+CREATE INDEX "kssj_strukture_ix1" ON "kssj_strukture" ("id_vrste_strukture")
+;
+
+CREATE INDEX "kssj_strukture_ix2" ON "kssj_strukture" ("id_gesla")
 ;
 
 -- Add keys for table kssj_strukture
