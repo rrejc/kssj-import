@@ -2,11 +2,11 @@
 	require_once('../config.php');
 	require_once('DataImporter.php');
 
-	$db = pg_connect($connection_string);	
+	$db = pg_connect($connection_string) or die('Unable to connect to database server - check config.php!');	
 	$importer = new DataImporter();	
 	$importer->db = $db;
 	
-	date_default_timezone_set('Europe/Ljubljana'); // Set in ini
+	date_default_timezone_set('Europe/Ljubljana'); // Should be set in php config
 	
 	// Cleanup
 	$importer->cleanup();
